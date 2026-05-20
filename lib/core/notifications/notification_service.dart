@@ -45,7 +45,7 @@ class NotificationService {
       debugPrint('NotificationService: timezone fallback - $e');
     }
 
-    const android = AndroidInitializationSettings(_androidIconRes.substring(1));
+    const android = AndroidInitializationSettings('ic_notification');
     const ios = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,

@@ -198,11 +198,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.battery_alert_outlined),
-            title: const Text('Buka pengaturan baterai HP'),
+            title: const Text('Buka info aplikasi (untuk MIUI)'),
             subtitle: const Text(
-                'Set "No restrictions" biar alarm gak di-kill (Xiaomi)'),
-            onTap: () =>
-                AppSettings.openAppSettings(type: AppSettingsType.battery),
+                'Set Battery saver "No restrictions" + Autostart ON'),
+            onTap: () => AppSettings.openAppSettings(),
           ),
           ListTile(
             leading: const Icon(Icons.bug_report_outlined),
