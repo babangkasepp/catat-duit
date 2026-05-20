@@ -2,10 +2,13 @@ class AmountParser {
   /// Parses Indonesian amount notation: "50rb" -> 50000, "1.2jt" -> 1200000, "350.000" -> 350000
   static double? parse(String input) {
     if (input.isEmpty) return null;
-    final s = input.toLowerCase().replaceAll(' ', '');
+    // NOTE: jangan strip spasi — bikin word boundary `\b` di regex suffix
+    // gagal kalau token berikutnya kebetulan diawali huruf (mis. "50k kopi").
+    final s = input.toLowerCase();
 
-    // Pattern 1: number + suffix (rb, ribu, k, jt, juta, m)
-    final suffixPattern = RegExp(r'(\d+(?:[.,]\d+)?)(rb|ribu|k|jt|juta|m)\b');
+    // Pattern 1: number + suffix (rb, ribu, k, jt, juta, m).
+    // Spasi opsional antara angka & suffix ("50 rb" juga valid).
+    final suffixPattern = RegExp(r'(\d+(?:[.,]\d+)?)\s*(rb|ribu|k|jt|juta|m)\b');
     final m = suffixPattern.firstMatch(s);
     if (m != null) {
       final num = double.tryParse(m.group(1)!.replaceAll(',', '.'));
