@@ -1,3 +1,4 @@
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,12 +41,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (_reminderOn) {
       final granted = await NotificationService.instance.requestPermissions();
       if (!granted && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-                'Permission notif belum di-allow. Buka Settings > Apps > CatatDuit > Notifications.'),
-          ),
-        );
+        _showPermissionSheet();
         setState(() => _reminderOn = false);
         await p.setBool('reminder_on', false);
         return;
@@ -67,24 +63,85 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _testNotification() async {
+  Future<void> _instantTest() async {
     final granted = await NotificationService.instance.requestPermissions();
     if (!granted && mounted) {
+      _showPermissionSheet();
+      return;
+    }
+    await NotificationService.instance.showInstantTest();
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Allow notification permission dulu di settings HP.'),
-        ),
+            content: Text('Notif instan dikirim. Cek status bar 👀')),
       );
+    }
+  }
+
+  Future<void> _scheduledTest() async {
+    final granted = await NotificationService.instance.requestPermissions();
+    if (!granted && mounted) {
+      _showPermissionSheet();
       return;
     }
     await NotificationService.instance.scheduleTestNotification(seconds: 5);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Notif tes muncul 5 detik lagi 🔔'),
-        ),
+            content: Text('Notif scheduled muncul 5 detik lagi 🔔')),
       );
     }
+  }
+
+  void _showPermissionSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text(
+            'Notif belum di-allow',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Buka pengaturan notifikasi HP buat enable.\n\nUntuk Xiaomi/MIUI: aktifkan juga "Autostart" dan set "Battery saver" jadi "No restrictions".',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () {
+              AppSettings.openAppSettings(type: AppSettingsType.notification);
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.settings),
+            label: const Text('Buka Setting Notif'),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Future<void> _showDiagnostics() async {
+    final info = await NotificationService.instance.diagnostics();
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Diagnostic'),
+        content: SingleChildScrollView(
+          child: Text(
+            info.entries.map((e) => '${e.key}: ${e.value}').join('\n'),
+            style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Tutup')),
+        ],
+      ),
+    );
   }
 
   @override
@@ -117,23 +174,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               }
             },
           ),
+          const Divider(height: 32),
+          _section(theme, 'Diagnostic Notif'),
           ListTile(
-            leading: const Icon(Icons.notifications_active_outlined),
-            title: const Text('Test notif (5 detik)'),
-            subtitle: const Text('Cek notif sistem jalan apa nggak'),
-            onTap: _testNotification,
+            leading: const Icon(Icons.bolt),
+            title: const Text('Test notif INSTAN'),
+            subtitle: const Text(
+                'Tes channel notif (kalau ini gak muncul = OEM block)'),
+            onTap: _instantTest,
+          ),
+          ListTile(
+            leading: const Icon(Icons.timer_outlined),
+            title: const Text('Test notif scheduled (5 detik)'),
+            subtitle: const Text('Tes alarm scheduling'),
+            onTap: _scheduledTest,
+          ),
+          ListTile(
+            leading: const Icon(Icons.notifications_outlined),
+            title: const Text('Buka pengaturan notif HP'),
+            subtitle: const Text('Enable notif manual + channel'),
+            onTap: () => AppSettings.openAppSettings(
+                type: AppSettingsType.notification),
+          ),
+          ListTile(
+            leading: const Icon(Icons.battery_alert_outlined),
+            title: const Text('Buka pengaturan baterai HP'),
+            subtitle: const Text(
+                'Set "No restrictions" biar alarm gak di-kill (Xiaomi)'),
+            onTap: () =>
+                AppSettings.openAppSettings(type: AppSettingsType.battery),
+          ),
+          ListTile(
+            leading: const Icon(Icons.bug_report_outlined),
+            title: const Text('Lihat diagnostic'),
+            subtitle: const Text('Timezone, pending notif, status permission'),
+            onTap: _showDiagnostics,
           ),
           const Divider(height: 32),
           _section(theme, 'Tentang'),
           const ListTile(
             title: Text('CatatDuit'),
-            subtitle: Text('v0.1.0 — Offline-first finance tracker'),
+            subtitle: Text('v0.1.2 — Offline-first finance tracker'),
             leading: Icon(Icons.info_outline),
           ),
           const ListTile(
             leading: Icon(Icons.shield_outlined),
             title: Text('Privasi'),
-            subtitle: Text('Data lu cuma disimpan di HP. Gak ada cloud, gak ada login.'),
+            subtitle: Text(
+                'Data lu cuma disimpan di HP. Gak ada cloud, gak ada login.'),
           ),
           const ListTile(
             leading: Icon(Icons.handshake_outlined),
@@ -151,7 +239,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       child: Text(
         title.toUpperCase(),
         style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.primary, fontWeight: FontWeight.w800, letterSpacing: 1),
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1),
       ),
     );
   }
