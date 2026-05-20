@@ -1,0 +1,22 @@
+name: Code Quality
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    name: Format + Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Verify formatting
+        run: dart format --set-exit-if-changed lib test
+      - name: Analyze code
+        run: flutter analyze --no-fatal-infos

@@ -1,0 +1,29 @@
+# Build artifacts
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+.idea/
+.vscode/
+*.iml
+
+# Android
+android/.gradle/
+android/captures/
+android/local.properties
+android/app/release/
+*.jks
+*.keystore
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# Misc
+.DS_Store
+*.log

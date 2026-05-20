@@ -1,0 +1,192 @@
+{
+  "categories": [
+    {
+      "id": "makan_minum",
+      "name": "Makan & Minum",
+      "icon": "🍽️",
+      "color": "#FF6B6B",
+      "type": "expense",
+      "keywords": [
+        "makan", "lunch", "dinner", "sarapan", "breakfast", "siang", "malam",
+        "nasi", "padang", "warteg", "bakso", "soto", "mie", "ayam", "rendang",
+        "seblak", "martabak", "bubur", "sate", "gado", "ketoprak", "nasgor",
+        "kopi", "coffee", "starbucks", "kopken", "kopkit", "espresso",
+        "latte", "cappuccino", "americano", "matcha", "boba", "chatime",
+        "haus", "thai tea", "es teh", "teh tarik", "milkshake",
+        "mcd", "kfc", "burger king", "richeese", "hokben", "pizza hut",
+        "domino", "solaria", "indomie", "warmindo", "warung",
+        "jajan", "snack", "cemilan", "gorengan", "cilok", "cireng"
+      ]
+    },
+    {
+      "id": "transport",
+      "name": "Transport",
+      "icon": "🚗",
+      "color": "#4ECDC4",
+      "type": "expense",
+      "keywords": [
+        "gojek", "grab", "ojol", "ojek", "bluebird", "taksi", "taxi",
+        "bensin", "pertalite", "pertamax", "solar", "shell", "spbu",
+        "etoll", "e-toll", "tol", "parkir", "parking",
+        "krl", "transjakarta", "mrt", "lrt", "kereta", "busway",
+        "angkot", "bus", "travel", "shuttle",
+        "service motor", "service mobil", "ban", "oli",
+        "pulang", "berangkat", "ke kantor", "ke rumah", "ke mall"
+      ]
+    },
+    {
+      "id": "belanja",
+      "name": "Belanja",
+      "icon": "🛒",
+      "color": "#FFD93D",
+      "type": "expense",
+      "keywords": [
+        "shopee", "tokped", "tokopedia", "lazada", "blibli", "bukalapak",
+        "tiktok shop", "ttshop", "tiktokshop",
+        "indomaret", "alfamart", "alfamidi", "superindo", "carrefour",
+        "transmart", "hypermart", "lottemart", "yogya",
+        "belanja", "groceries", "sembako", "beras", "minyak", "gula",
+        "sabun", "shampoo", "pasta gigi", "deterjen", "tissue",
+        "baju", "celana", "sepatu", "tas", "jaket", "kaos", "kemeja"
+      ]
+    },
+    {
+      "id": "tagihan",
+      "name": "Tagihan",
+      "icon": "💡",
+      "color": "#FF9F43",
+      "type": "expense",
+      "keywords": [
+        "listrik", "pln", "token listrik", "pulsa listrik",
+        "air", "pdam", "gas", "internet", "wifi", "indihome", "biznet",
+        "myrepublic", "first media",
+        "pulsa", "paket data", "kuota", "telkomsel", "xl", "indosat",
+        "smartfren", "tri", "axis", "by.u",
+        "tagihan", "bayar", "iuran", "rt", "rw", "keamanan", "kebersihan",
+        "bpjs", "asuransi", "premi"
+      ]
+    },
+    {
+      "id": "hiburan",
+      "name": "Hiburan",
+      "icon": "🎬",
+      "color": "#A29BFE",
+      "type": "expense",
+      "keywords": [
+        "netflix", "spotify", "disney", "viu", "hbo", "prime", "youtube",
+        "bioskop", "cgv", "xxi", "cinepolis", "cinemaxx",
+        "konser", "tiket", "gigs", "festival",
+        "game", "steam", "ml", "pubg", "free fire", "diamond",
+        "gym", "fitness", "yoga", "berenang", "kolam",
+        "karaoke", "billiard", "bowling", "trampolin"
+      ]
+    },
+    {
+      "id": "kesehatan",
+      "name": "Kesehatan",
+      "icon": "💊",
+      "color": "#26DE81",
+      "type": "expense",
+      "keywords": [
+        "obat", "apotik", "apotek", "kimia farma", "century", "guardian",
+        "dokter", "rumah sakit", "rs", "klinik", "puskesmas",
+        "vitamin", "suplemen", "masker", "vaksin", "tes", "lab",
+        "pijat", "spa", "salon", "potong rambut", "barber", "skincare"
+      ]
+    },
+    {
+      "id": "pendidikan",
+      "name": "Pendidikan",
+      "icon": "📚",
+      "color": "#5F27CD",
+      "type": "expense",
+      "keywords": [
+        "kursus", "course", "udemy", "coursera", "skillshare", "bootcamp",
+        "buku", "ebook", "tokobuku", "gramedia",
+        "spp", "kuliah", "semester", "ukt", "skripsi",
+        "training", "seminar", "workshop", "sertifikasi"
+      ]
+    },
+    {
+      "id": "sosial",
+      "name": "Sosial",
+      "icon": "🎁",
+      "color": "#FF6348",
+      "type": "expense",
+      "keywords": [
+        "kondangan", "nikahan", "pernikahan", "amplop", "angpao",
+        "kado", "hadiah", "gift", "ulang tahun", "ultah",
+        "donasi", "sedekah", "infaq", "zakat", "qurban",
+        "patungan", "iuran teman", "arisan", "reuni", "nongkrong"
+      ]
+    },
+    {
+      "id": "keluarga",
+      "name": "Keluarga",
+      "icon": "👨‍👩‍👧",
+      "color": "#EE5A6F",
+      "type": "expense",
+      "keywords": [
+        "anak", "istri", "suami", "ortu", "orang tua", "ibu", "bapak",
+        "mama", "papa", "mamah", "papah", "nenek", "kakek",
+        "popok", "diapers", "susu anak", "mainan", "sekolah anak"
+      ]
+    },
+    {
+      "id": "lainnya_keluar",
+      "name": "Lainnya",
+      "icon": "📦",
+      "color": "#95A5A6",
+      "type": "expense",
+      "keywords": []
+    },
+    {
+      "id": "gaji",
+      "name": "Gaji",
+      "icon": "💰",
+      "color": "#00B894",
+      "type": "income",
+      "keywords": ["gaji", "salary", "gajian", "payroll", "upah"]
+    },
+    {
+      "id": "bonus",
+      "name": "Bonus",
+      "icon": "🎉",
+      "color": "#FDCB6E",
+      "type": "income",
+      "keywords": ["bonus", "thr", "insentif", "komisi", "fee"]
+    },
+    {
+      "id": "freelance",
+      "name": "Freelance",
+      "icon": "💼",
+      "color": "#74B9FF",
+      "type": "income",
+      "keywords": ["freelance", "proyek", "project", "client", "klien", "honor"]
+    },
+    {
+      "id": "investasi",
+      "name": "Investasi",
+      "icon": "📈",
+      "color": "#6C5CE7",
+      "type": "income",
+      "keywords": ["dividen", "saham", "crypto", "reksadana", "deposito", "bunga", "profit", "cuan"]
+    },
+    {
+      "id": "transfer_masuk",
+      "name": "Transfer Masuk",
+      "icon": "💸",
+      "color": "#10AC84",
+      "type": "income",
+      "keywords": ["dapet", "dapat", "dikasih", "transfer", "kirim", "kiriman"]
+    },
+    {
+      "id": "lainnya_masuk",
+      "name": "Lainnya",
+      "icon": "💵",
+      "color": "#7F8C8D",
+      "type": "income",
+      "keywords": []
+    }
+  ]
+}

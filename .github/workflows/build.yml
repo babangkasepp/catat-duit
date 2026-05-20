@@ -1,0 +1,202 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag (e.g. v0.1.0). Leave blank to skip release.'
+        required: false
+        type: string
+
+env:
+  FLUTTER_VERSION: '3.24.5'
+  JAVA_VERSION: '17'
+
+jobs:
+  # ==========================================================
+  # Job 1 — Static analysis & unit tests (fast feedback)
+  # ==========================================================
+  test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Cache pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            .dart_tool
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
+
+      - name: Install deps
+        run: flutter pub get
+
+      - name: Format check
+        run: dart format --set-exit-if-changed lib test
+        continue-on-error: true
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+        continue-on-error: true
+
+      - name: Run tests
+        run: flutter test --reporter=expanded
+
+  # ==========================================================
+  # Job 2 — Build debug APK on every push (smoke build)
+  # ==========================================================
+  build-debug:
+    name: Build Debug APK
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install deps
+        run: flutter pub get
+
+      - name: Build debug APK
+        run: flutter build apk --debug --no-tree-shake-icons
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: catat-duit-debug-${{ github.sha }}
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
+
+  # ==========================================================
+  # Job 3 — Build release APK + AAB (only on tag push or manual)
+  # ==========================================================
+  build-release:
+    name: Build Release APK + AAB
+    needs: test
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install deps
+        run: flutter pub get
+
+      # ---- Optional signing ----
+      # Add these GitHub Secrets if you want signed release builds:
+      #   ANDROID_KEYSTORE_BASE64  — base64 of your keystore.jks
+      #   ANDROID_KEYSTORE_PASSWORD
+      #   ANDROID_KEY_ALIAS
+      #   ANDROID_KEY_PASSWORD
+      # If absent, falls back to debug signing (still installable as APK).
+      - name: Decode keystore (if provided)
+        id: keystore
+        run: |
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
+            cat > android/key.properties <<EOF
+          storeFile=upload-keystore.jks
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          EOF
+            echo "signed=true" >> $GITHUB_OUTPUT
+          else
+            echo "signed=false" >> $GITHUB_OUTPUT
+            echo "::warning::No keystore secrets configured — releasing with debug signing."
+          fi
+
+      - name: Build release APK (split per ABI)
+        run: flutter build apk --release --split-per-abi
+
+      - name: Build universal release APK
+        run: flutter build apk --release
+
+      - name: Build App Bundle
+        run: flutter build appbundle --release
+
+      - name: Rename outputs
+        run: |
+          VERSION="${{ github.ref_name }}"
+          [ -z "$VERSION" ] && VERSION="${{ github.event.inputs.release_tag }}"
+          [ -z "$VERSION" ] && VERSION="manual-$(date +%Y%m%d-%H%M)"
+          mkdir -p release-out
+          cp build/app/outputs/flutter-apk/app-release.apk             release-out/catat-duit-${VERSION}-universal.apk
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk    release-out/catat-duit-${VERSION}-arm64.apk    || true
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk  release-out/catat-duit-${VERSION}-arm32.apk    || true
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk       release-out/catat-duit-${VERSION}-x86_64.apk   || true
+          cp build/app/outputs/bundle/release/app-release.aab           release-out/catat-duit-${VERSION}.aab
+          ls -lh release-out/
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: catat-duit-release-${{ env.VERSION }}
+          path: release-out/*
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: CatatDuit ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: release-out/*
+          body: |
+            ## CatatDuit ${{ github.ref_name }}
+
+            Aplikasi manajemen keuangan offline-first untuk Android.
+
+            ### 📥 Download
+            - **`catat-duit-${{ github.ref_name }}-arm64.apk`** — buat HP modern (recommended)
+            - **`catat-duit-${{ github.ref_name }}-universal.apk`** — fallback kalau ragu
+            - **`catat-duit-${{ github.ref_name }}.aab`** — buat upload Play Store
+
+            ### 🚀 Cara install
+            1. Download APK arm64
+            2. Allow "Install dari sumber gak dikenal" di Settings
+            3. Buka APK → Install
+
+            Signed: ${{ steps.keystore.outputs.signed == 'true' && '✅ Release key' || '⚠️ Debug key (dev only)' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
