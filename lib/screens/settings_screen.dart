@@ -38,12 +38,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await p.setInt('reminder_minute', _reminderTime.minute);
 
     if (_reminderOn) {
+      final granted = await NotificationService.instance.requestPermissions();
+      if (!granted && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Permission notif belum di-allow. Buka Settings > Apps > CatatDuit > Notifications.'),
+          ),
+        );
+        setState(() => _reminderOn = false);
+        await p.setBool('reminder_on', false);
+        return;
+      }
       await NotificationService.instance.scheduleDailyReminder(
         hour: _reminderTime.hour,
         minute: _reminderTime.minute,
       );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Reminder aktif tiap ${_reminderTime.format(context)}'),
+          ),
+        );
+      }
     } else {
       await NotificationService.instance.cancelAll();
+    }
+  }
+
+  Future<void> _testNotification() async {
+    final granted = await NotificationService.instance.requestPermissions();
+    if (!granted && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Allow notification permission dulu di settings HP.'),
+        ),
+      );
+      return;
+    }
+    await NotificationService.instance.scheduleTestNotification(seconds: 5);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Notif tes muncul 5 detik lagi 🔔'),
+        ),
+      );
     }
   }
 
@@ -76,6 +116,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 await _saveReminder();
               }
             },
+          ),
+          ListTile(
+            leading: const Icon(Icons.notifications_active_outlined),
+            title: const Text('Test notif (5 detik)'),
+            subtitle: const Text('Cek notif sistem jalan apa nggak'),
+            onTap: _testNotification,
           ),
           const Divider(height: 32),
           _section(theme, 'Tentang'),

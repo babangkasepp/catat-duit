@@ -34,6 +34,8 @@ dependencies:
   # Notifications (offline reminders)
   flutter_local_notifications: ^17.2.1
   timezone: ^0.9.4
+  flutter_timezone: ^3.0.1
+  permission_handler: ^11.3.1
 
   # Storage
   shared_preferences: ^2.2.3
@@ -51,7 +53,6 @@ dependencies:
 
   # Utility
   uuid: ^4.4.0
-  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
