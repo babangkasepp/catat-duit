@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_picker_android/image_picker_android.dart';
 
 import '../core/utils/formatters.dart';
 import '../features/ocr/ocr_service.dart';
@@ -34,6 +36,7 @@ class ScanReceiptScreen extends ConsumerStatefulWidget {
 
 class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   bool _busy = false;
+  bool _didAutoPick = false;
   String? _imagePath;
   ReceiptParse? _parsed;
   String? _error;
@@ -41,8 +44,42 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-prompt source picker on first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) => _pickSource());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 1) Coba recover lost data (Android low-mem killed our activity)
+      await _recoverLostData();
+      if (!mounted || _didAutoPick) return;
+      _didAutoPick = true;
+      // 2) Kalau gak ada lost data, baru tanya source
+      if (_imagePath == null) {
+        await _pickSource();
+      }
+    });
+  }
+
+  Future<void> _recoverLostData() async {
+    if (!Platform.isAndroid) return;
+    try {
+      final picker = ImagePickerPlatform.instance;
+      if (picker is ImagePickerAndroid) {
+        final response = await picker.getLostResults();
+        if (response.isEmpty) return;
+        if (response.files != null && response.files!.isNotEmpty) {
+          final file = response.files!.first;
+          if (!mounted) return;
+          setState(() {
+            _imagePath = file.path;
+            _busy = true;
+          });
+          await _processImage(file.path);
+        }
+      }
+    } catch (e) {
+      // ignore — user akan dapat picker biasa
+      if (kDebugMode) {
+        // ignore: avoid_print
+        print('lost-data recovery failed: $e');
+      }
+    }
   }
 
   Future<void> _pickSource() async {
@@ -88,12 +125,25 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
         maxWidth: 2400,
       );
       if (file == null) {
+        if (!mounted) return;
         setState(() => _busy = false);
         return;
       }
+      if (!mounted) return;
       setState(() => _imagePath = file.path);
+      await _processImage(file.path);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = '$e';
+        _busy = false;
+      });
+    }
+  }
 
-      final raw = await OcrService.instance.recognizeFromPath(file.path);
+  Future<void> _processImage(String path) async {
+    try {
+      final raw = await OcrService.instance.recognizeFromPath(path);
       final parsed = ReceiptParser.parse(raw);
       if (!mounted) return;
       setState(() {
@@ -103,7 +153,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = '$e';
+        _error = 'Gagal baca struk: $e';
         _busy = false;
       });
     }
@@ -132,7 +182,16 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
         ),
       ),
       body: _busy
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Lagi baca struk...'),
+                ],
+              ),
+            )
           : _error != null
               ? _ErrorView(error: _error!, onRetry: _pickSource)
               : _parsed == null
