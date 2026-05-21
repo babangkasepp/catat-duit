@@ -113,8 +113,7 @@ class ReceiptParser {
       final isMultiWord = matchedKw.contains(' ');
       if (isSkip && !isMultiWord) continue;
 
-      final amount = _extractMaxNumber(lines[i]) ??
-          (i + 1 < lines.length ? _extractMaxNumber(lines[i + 1]) : null);
+      final amount = _extractMaxNumber(lines[i]);
       if (amount != null && amount >= 1000) {
         candidates.add((i, matchedKw, amount));
       }
@@ -231,8 +230,8 @@ class ReceiptParser {
         .split(RegExp(r'\s+'))
         .map((w) {
           if (w.isEmpty) return w;
-          // Preserve short all-caps acronyms (SCH, KFC, JCO, etc.)
-          if (w.length <= 4 && w == w.toUpperCase() && RegExp(r'^[A-Z]+$').hasMatch(w)) {
+          // Preserve short all-caps acronyms (SCH, KFC, JCO, BCA, BRI — 2-3 chars).
+          if (w.length <= 3 && w == w.toUpperCase() && RegExp(r'^[A-Z]+$').hasMatch(w)) {
             return w;
           }
           if (w.length == 1) return w.toUpperCase();
