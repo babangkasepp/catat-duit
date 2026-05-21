@@ -9,6 +9,7 @@ import '../features/transactions/models/category.dart';
 import '../features/transactions/models/transaction.dart';
 import '../features/transactions/parser/transaction_parser.dart';
 import '../widgets/category_chip.dart';
+import 'scan_receipt_screen.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   const AddTransactionScreen({super.key});
@@ -84,6 +85,42 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     }
   }
 
+  Future<void> _scanReceipt() async {
+    final result = await Navigator.of(context).push<ScanReceiptResult>(
+      MaterialPageRoute(builder: (_) => const ScanReceiptScreen()),
+    );
+    if (result == null || !mounted) return;
+
+    setState(() {
+      _type = TxnType.expense;
+      if (result.amount != null) {
+        _amountCtrl.text = result.amount!.toStringAsFixed(0);
+      }
+      if (result.merchant != null) {
+        _noteCtrl.text = result.merchant!;
+        _quickCtrl.text = result.merchant!;
+      }
+      if (result.date != null) {
+        _date = result.date!;
+      }
+      _smartHint = '📸 Dari struk: ${[
+        if (result.amount != null) Money.compact(result.amount!),
+        if (result.merchant != null) result.merchant,
+      ].join(' · ')}';
+    });
+
+    // Trigger category auto-detect using the merchant text
+    if (result.merchant != null && result.merchant!.isNotEmpty) {
+      final parsed = await TransactionParser.parse(result.merchant!);
+      if (!mounted || parsed == null) return;
+      setState(() {
+        if (parsed.categoryId != null) {
+          _selectedCategoryId = parsed.categoryId;
+        }
+      });
+    }
+  }
+
   void _toast(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
@@ -102,6 +139,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Scan Struk',
+            icon: const Icon(Icons.document_scanner_outlined),
+            onPressed: _saving ? null : _scanReceipt,
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
