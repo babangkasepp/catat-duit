@@ -222,12 +222,12 @@ class ReceiptParser {
   // ---------- DATE ----------
   static DateTime? _extractDate(String text) {
     // Format umum di struk Indonesia:
+    //   2026-05-21          (ISO — cek dulu biar gak ke-match parsial sebagai dd-mm-yyyy)
     //   21/05/2026, 21-05-2026, 21.05.2026
-    //   2026-05-21
     //   21 Mei 2026
     final regexes = <RegExp>[
+      RegExp(r'(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})'), // yyyy-mm-dd FIRST
       RegExp(r'(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})'), // dd/mm/yyyy
-      RegExp(r'(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})'), // yyyy-mm-dd
     ];
 
     for (final r in regexes) {
