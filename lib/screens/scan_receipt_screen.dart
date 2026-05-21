@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_picker_android/image_picker_android.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 
 import '../core/utils/formatters.dart';
 import '../features/ocr/ocr_service.dart';
@@ -61,20 +62,30 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     try {
       final picker = ImagePickerPlatform.instance;
       if (picker is ImagePickerAndroid) {
-        final response = await picker.getLostResults();
+        final response = await picker.getLostData();
         if (response.isEmpty) return;
-        if (response.files != null && response.files!.isNotEmpty) {
-          final file = response.files!.first;
+        final files = response.files;
+        if (files != null && files.isNotEmpty) {
+          final file = files.first;
           if (!mounted) return;
           setState(() {
             _imagePath = file.path;
             _busy = true;
           });
           await _processImage(file.path);
+          return;
+        }
+        final single = response.file;
+        if (single != null) {
+          if (!mounted) return;
+          setState(() {
+            _imagePath = single.path;
+            _busy = true;
+          });
+          await _processImage(single.path);
         }
       }
     } catch (e) {
-      // ignore — user akan dapat picker biasa
       if (kDebugMode) {
         // ignore: avoid_print
         print('lost-data recovery failed: $e');
