@@ -14,12 +14,14 @@ class ScanReceiptResult {
   final String? merchant;
   final DateTime? date;
   final String? imagePath;
+  final bool autoSave;
 
   const ScanReceiptResult({
     this.amount,
     this.merchant,
     this.date,
     this.imagePath,
+    this.autoSave = false,
   });
 }
 
@@ -107,13 +109,14 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     }
   }
 
-  void _useResult() {
+  void _useResult({bool autoSave = false}) {
     if (_parsed == null) return;
     Navigator.of(context).pop(ScanReceiptResult(
       amount: _parsed!.amount,
       merchant: _parsed!.merchant,
       date: _parsed!.date,
       imagePath: _imagePath,
+      autoSave: autoSave,
     ));
   }
 
@@ -219,14 +222,25 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                             Expanded(
                               child: FilledButton.icon(
                                 onPressed: _parsed!.hasAnything
-                                    ? _useResult
+                                    ? () => _useResult()
                                     : null,
-                                icon: const Icon(Icons.check),
-                                label: const Text('Pakai'),
+                                icon: const Icon(Icons.edit),
+                                label: const Text('Cek dulu'),
                               ),
                             ),
                           ],
                         ),
+                        if (_parsed!.amount != null) ...[
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.tonalIcon(
+                              onPressed: () => _useResult(autoSave: true),
+                              icon: const Icon(Icons.bolt),
+                              label: const Text('Simpan langsung'),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
     );

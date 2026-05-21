@@ -24,8 +24,12 @@ class ReceiptParser {
     'total bayar',
     'total tagihan',
     'total belanja',
+    'total pembelian',
     'jumlah bayar',
+    'yang dibayar',
+    'total akhir',
     'total harga',
+    'jumlah',
     'total',
     'bayar',
     'tunai',
@@ -53,6 +57,10 @@ class ReceiptParser {
     'point',
     'poin',
     'hemat',
+    'ongkir',
+    'biaya ongkir',
+    'shipping',
+    'tagihan', // sering muncul sebagai label "LUNAS", bukan amount
   ];
 
   static ReceiptParse parse(String raw) {
@@ -87,18 +95,28 @@ class ReceiptParser {
     final candidates = <(int idx, String keyword, double value)>[];
     for (var i = 0; i < lines.length; i++) {
       final lower = lines[i].toLowerCase();
-      if (_skipKeywords.any((k) => lower.contains(k))) continue;
+      final isSkip = _skipKeywords.any((k) => lower.contains(k));
 
+      // Find best (earliest = most specific) total keyword match
+      String? matchedKw;
       for (final kw in _totalKeywords) {
         if (lower.contains(kw)) {
-          // ambil angka dari baris ini, atau baris berikutnya kalau kosong
-          final amount = _extractMaxNumber(lines[i]) ??
-              (i + 1 < lines.length ? _extractMaxNumber(lines[i + 1]) : null);
-          if (amount != null && amount >= 1000) {
-            candidates.add((i, kw, amount));
-            break;
-          }
+          matchedKw = kw;
+          break;
         }
+      }
+      if (matchedKw == null) continue;
+
+      // Multi-word total keyword wins over skip (e.g. "total tagihan" beats "tagihan").
+      // Single-word total keyword (just "total", "bayar", "jumlah") loses to skip
+      // (so "subtotal", "total bayar" line wouldn't both fire).
+      final isMultiWord = matchedKw.contains(' ');
+      if (isSkip && !isMultiWord) continue;
+
+      final amount = _extractMaxNumber(lines[i]) ??
+          (i + 1 < lines.length ? _extractMaxNumber(lines[i + 1]) : null);
+      if (amount != null && amount >= 1000) {
+        candidates.add((i, matchedKw, amount));
       }
     }
 
@@ -211,11 +229,15 @@ class ReceiptParser {
   static String _titleCase(String s) {
     return s
         .split(RegExp(r'\s+'))
-        .map((w) => w.isEmpty
-            ? w
-            : (w.length == 1
-                ? w.toUpperCase()
-                : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}'))
+        .map((w) {
+          if (w.isEmpty) return w;
+          // Preserve short all-caps acronyms (SCH, KFC, JCO, etc.)
+          if (w.length <= 4 && w == w.toUpperCase() && RegExp(r'^[A-Z]+$').hasMatch(w)) {
+            return w;
+          }
+          if (w.length == 1) return w.toUpperCase();
+          return '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}';
+        })
         .join(' ');
   }
 

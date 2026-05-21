@@ -138,4 +138,45 @@ Jl. Merdeka 12
       expect(r.amount, 50000);
     });
   });
+
+  group('ReceiptParser - real-world struk', () {
+    test('SCH (Tasikmalaya) — Sub Total + Total + Bayar w/ comma separator', () {
+      const text = '''
+SCH
+Jl. Re Martadinata No 183
+Panyingkiran
+Kota Tasikmalaya Jawa Barat
+Indonesia
+
+26/10/2025
+Pelanggan Umum
+
+Nama Barang   Total Harga
+Tiber Merah 90 cm - Meteran  7 x 17,500   122,500
+Semen Kiloan                 2 x 2,000      4,000
+Paku Kiloan 2" (5 cm)        0.1 x 20,000   2,000
+
+Sub Total       128,500
+Diskon                0
+Biaya Ongkir          0
+Total           128,500
+Bayar           128,500
+Tagihan          LUNAS
+''';
+      final r = ReceiptParser.parse(text);
+      expect(r.amount, 128500);
+      expect(r.merchant, 'SCH'); // acronym preserved
+      expect(r.date, DateTime(2025, 10, 26));
+    });
+
+    test('multi-word "Total Tagihan" wins over skip "tagihan"', () {
+      const text = '''
+Toko Maju
+Total Tagihan   50.000
+Tagihan         LUNAS
+''';
+      final r = ReceiptParser.parse(text);
+      expect(r.amount, 50000);
+    });
+  });
 }

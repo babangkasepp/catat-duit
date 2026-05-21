@@ -110,14 +110,21 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     });
 
     // Trigger category auto-detect using the merchant text
+    String? categoryId;
     if (result.merchant != null && result.merchant!.isNotEmpty) {
       final parsed = await TransactionParser.parse(result.merchant!);
-      if (!mounted || parsed == null) return;
+      if (!mounted) return;
+      categoryId = parsed?.categoryId;
       setState(() {
-        if (parsed.categoryId != null) {
-          _selectedCategoryId = parsed.categoryId;
+        if (categoryId != null) {
+          _selectedCategoryId = categoryId;
         }
       });
+    }
+
+    // Auto-save kalau user pilih "Simpan langsung" dan amount valid
+    if (result.autoSave && result.amount != null && result.amount! > 0) {
+      await _save();
     }
   }
 
