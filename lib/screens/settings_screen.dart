@@ -15,6 +15,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _reminderOn = false;
   TimeOfDay _reminderTime = const TimeOfDay(hour: 21, minute: 0);
+  int _versionTaps = 0;
 
   @override
   void initState() {
@@ -63,36 +64,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _instantTest() async {
-    final granted = await NotificationService.instance.requestPermissions();
-    if (!granted && mounted) {
-      _showPermissionSheet();
-      return;
-    }
-    await NotificationService.instance.showInstantTest();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Notif instan dikirim. Cek status bar 👀')),
-      );
-    }
-  }
-
-  Future<void> _scheduledTest() async {
-    final granted = await NotificationService.instance.requestPermissions();
-    if (!granted && mounted) {
-      _showPermissionSheet();
-      return;
-    }
-    await NotificationService.instance.scheduleTestNotification(seconds: 5);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Notif scheduled muncul 5 detik lagi 🔔')),
-      );
-    }
-  }
-
   void _showPermissionSheet() {
     showModalBottomSheet(
       context: context,
@@ -122,7 +93,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<void> _showDiagnostics() async {
+  // Hidden debug menu — 7-tap on version row.
+  Future<void> _onVersionTap() async {
+    _versionTaps++;
+    if (_versionTaps < 7) return;
+    _versionTaps = 0;
     final info = await NotificationService.instance.diagnostics();
     if (!mounted) return;
     showDialog(
@@ -136,6 +111,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
         actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await NotificationService.instance.showInstantTest();
+            },
+            child: const Text('Test notif'),
+          ),
           TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('Tutup')),
@@ -175,46 +157,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
           ),
           const Divider(height: 32),
-          _section(theme, 'Diagnostic Notif'),
+          _section(theme, 'Tentang'),
           ListTile(
-            leading: const Icon(Icons.bolt),
-            title: const Text('Test notif INSTAN'),
+            leading: const Icon(Icons.info_outline),
+            title: const Text('CatatDuit'),
+            subtitle: const Text('v0.2.1 — Offline-first finance tracker'),
+            onTap: _onVersionTap,
+          ),
+          ListTile(
+            leading: const Icon(Icons.notifications_active_outlined),
+            title: const Text('Notifikasi gak muncul?'),
             subtitle: const Text(
-                'Tes channel notif (kalau ini gak muncul = OEM block)'),
-            onTap: _instantTest,
-          ),
-          ListTile(
-            leading: const Icon(Icons.timer_outlined),
-            title: const Text('Test notif scheduled (5 detik)'),
-            subtitle: const Text('Tes alarm scheduling'),
-            onTap: _scheduledTest,
-          ),
-          ListTile(
-            leading: const Icon(Icons.notifications_outlined),
-            title: const Text('Buka pengaturan notif HP'),
-            subtitle: const Text('Enable notif manual + channel'),
+                'Buka setelan HP & enable. Khusus MIUI: Autostart ON + Battery saver "No restrictions".'),
             onTap: () => AppSettings.openAppSettings(
                 type: AppSettingsType.notification),
-          ),
-          ListTile(
-            leading: const Icon(Icons.battery_alert_outlined),
-            title: const Text('Buka info aplikasi (untuk MIUI)'),
-            subtitle: const Text(
-                'Set Battery saver "No restrictions" + Autostart ON'),
-            onTap: () => AppSettings.openAppSettings(),
-          ),
-          ListTile(
-            leading: const Icon(Icons.bug_report_outlined),
-            title: const Text('Lihat diagnostic'),
-            subtitle: const Text('Timezone, pending notif, status permission'),
-            onTap: _showDiagnostics,
-          ),
-          const Divider(height: 32),
-          _section(theme, 'Tentang'),
-          const ListTile(
-            title: Text('CatatDuit'),
-            subtitle: Text('v0.1.2 — Offline-first finance tracker'),
-            leading: Icon(Icons.info_outline),
           ),
           const ListTile(
             leading: Icon(Icons.shield_outlined),
