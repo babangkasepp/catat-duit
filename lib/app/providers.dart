@@ -61,6 +61,14 @@ final yearTotalsProvider = FutureProvider<({double income, double expense})>((re
   return ref.read(txRepoProvider).totals(start, end);
 });
 
+/// Cumulative balance from the very first transaction ever.
+final allTimeTotalsProvider = FutureProvider<({double income, double expense})>((ref) async {
+  ref.watch(txRefreshProvider);
+  final start = DateTime(2000, 1, 1);
+  final end = DateTime(2099, 12, 31, 23, 59, 59);
+  return ref.read(txRepoProvider).totals(start, end);
+});
+
 final budgetsProvider = FutureProvider<List<Budget>>((ref) async {
   ref.watch(txRefreshProvider);
   return ref.read(budgetRepoProvider).all();

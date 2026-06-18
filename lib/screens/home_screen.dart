@@ -16,6 +16,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final monthTotals = ref.watch(monthTotalsProvider);
+    final allTimeTotals = ref.watch(allTimeTotalsProvider);
     final todayTotals = ref.watch(todayTotalsProvider);
     final recent = ref.watch(recentTxProvider);
     final cats = ref.watch(allCategoriesProvider);
@@ -32,7 +33,7 @@ class HomeScreen extends ConsumerWidget {
           children: [
             _greeting(theme),
             const SizedBox(height: 20),
-            _balanceCard(theme, monthTotals),
+            _balanceCard(theme, allTimeTotals, monthTotals),
             const SizedBox(height: 16),
             _todayCard(theme, todayTotals),
             const SizedBox(height: 16),
@@ -96,11 +97,14 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _balanceCard(
-      ThemeData theme, AsyncValue<({double income, double expense})> totals) {
-    return totals.when(
-      data: (t) {
-        final balance = t.income - t.expense;
-        final isPositive = balance >= 0;
+      ThemeData theme,
+      AsyncValue<({double income, double expense})> allTime,
+      AsyncValue<({double income, double expense})> month) {
+    return allTime.when(
+      data: (all) {
+        final cumBalance = all.income - all.expense;
+        final isPositive = cumBalance >= 0;
+        final m = month.value;
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -117,29 +121,31 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Saldo Bulan Ini',
+              Text('Total Saldo',
                   style: theme.textTheme.bodyMedium
                       ?.copyWith(color: Colors.white.withOpacity(0.85))),
               const SizedBox(height: 6),
               Text(
-                Money.format(balance),
+                Money.format(cumBalance),
                 style: theme.textTheme.headlineMedium?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                      child: _miniStat('Masuk', t.income, Icons.arrow_downward,
-                          Colors.greenAccent)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                      child: _miniStat('Keluar', t.expense, Icons.arrow_upward,
-                          Colors.redAccent)),
-                ],
-              ),
+              if (m != null) ...[
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                        child: _miniStat('Masuk', m.income,
+                            Icons.arrow_downward, Colors.greenAccent)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _miniStat('Keluar', m.expense,
+                            Icons.arrow_upward, Colors.redAccent)),
+                  ],
+                ),
+              ],
               if (!isPositive) ...[
                 const SizedBox(height: 8),
                 Row(children: [
@@ -162,7 +168,8 @@ class HomeScreen extends ConsumerWidget {
       loading: () => const SizedBox(
           height: 160, child: Center(child: CircularProgressIndicator())),
       error: (e, _) => Card(
-          child: Padding(padding: const EdgeInsets.all(16), child: Text('Error: $e'))),
+          child: Padding(
+              padding: const EdgeInsets.all(16), child: Text('Error: $e'))),
     );
   }
 
