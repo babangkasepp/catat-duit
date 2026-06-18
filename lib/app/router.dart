@@ -9,6 +9,7 @@ import '../screens/reports_screen.dart';
 import '../screens/budget_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/onboarding_screen.dart';
+import '../screens/wrapped_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -31,6 +32,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/add',
         builder: (_, __) => const AddTransactionScreen(),
+      ),
+      GoRoute(
+        path: '/wrapped',
+        builder: (_, __) => const WrappedScreen(),
       ),
     ],
   );

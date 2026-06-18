@@ -7,6 +7,7 @@ import '../app/providers.dart';
 import '../core/utils/formatters.dart';
 import '../features/transactions/models/category.dart';
 import '../features/transactions/models/transaction.dart';
+import '../features/streak/streak_service.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -18,6 +19,7 @@ class HomeScreen extends ConsumerWidget {
     final todayTotals = ref.watch(todayTotalsProvider);
     final recent = ref.watch(recentTxProvider);
     final cats = ref.watch(allCategoriesProvider);
+    final streak = ref.watch(streakProvider);
 
     return SafeArea(
       child: RefreshIndicator(
@@ -33,6 +35,8 @@ class HomeScreen extends ConsumerWidget {
             _balanceCard(theme, monthTotals),
             const SizedBox(height: 16),
             _todayCard(theme, todayTotals),
+            const SizedBox(height: 16),
+            _streakCard(theme, streak),
             const SizedBox(height: 24),
             Row(
               children: [
@@ -225,6 +229,84 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
       ),
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _streakCard(ThemeData theme, AsyncValue<StreakData> streak) {
+    return streak.when(
+      data: (s) {
+        if (s.totalTransactions == 0) return const SizedBox.shrink();
+        final recentBadges =
+            s.achievements.where((a) => a.unlocked).toList();
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      s.currentStreak > 0 ? '🔥' : '💤',
+                      style: const TextStyle(fontSize: 28),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            s.currentStreak > 0
+                                ? '${s.currentStreak} hari streak!'
+                                : 'Streak terputus',
+                            style: theme.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          Text(
+                            'Rekor: ${s.longestStreak} hari • ${s.totalDaysLogged} hari aktif',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (recentBadges.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      for (final a in recentBadges)
+                        Tooltip(
+                          message: '${a.title}: ${a.description}',
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer
+                                  .withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${a.icon} ${a.title}',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
     );

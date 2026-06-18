@@ -6,6 +6,7 @@ import '../features/transactions/models/transaction.dart';
 import '../features/transactions/models/category.dart';
 import '../features/budget/budget_repository.dart';
 import '../features/budget/budget_model.dart';
+import '../features/streak/streak_service.dart';
 import '../core/utils/formatters.dart';
 
 final txRepoProvider = Provider<TransactionRepository>((_) => TransactionRepository());
@@ -63,4 +64,9 @@ final yearTotalsProvider = FutureProvider<({double income, double expense})>((re
 final budgetsProvider = FutureProvider<List<Budget>>((ref) async {
   ref.watch(txRefreshProvider);
   return ref.read(budgetRepoProvider).all();
+});
+
+final streakProvider = FutureProvider<StreakData>((ref) async {
+  ref.watch(txRefreshProvider);
+  return StreakService.compute();
 });

@@ -1,16 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../app/providers.dart';
 import '../core/utils/formatters.dart';
 import '../features/transactions/models/category.dart';
+import '../features/export/pdf_export_service.dart';
 
-class ReportsScreen extends ConsumerWidget {
+class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ReportsScreen> createState() => _ReportsScreenState();
+}
+
+class _ReportsScreenState extends ConsumerState<ReportsScreen> {
+  bool _exporting = false;
+
+  Future<void> _exportPdf() async {
+    final now = DateTime.now();
+    setState(() => _exporting = true);
+    try {
+      final file = await PdfExportService.generateMonthlyReport(
+        year: now.year,
+        month: now.month,
+      );
+      await PdfExportService.shareReport(file);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal export: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final monthTotals = ref.watch(monthTotalsProvider);
     final yearTotals = ref.watch(yearTotalsProvider);
@@ -21,7 +50,27 @@ class ReportsScreen extends ConsumerWidget {
     final monthLabel = '${DateRange.monthName(now.month)} ${now.year}';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Laporan')),
+      appBar: AppBar(
+        title: const Text('Laporan'),
+        actions: [
+          IconButton(
+            tooltip: 'Year in Review',
+            icon: const Icon(Icons.auto_awesome),
+            onPressed: () => context.push('/wrapped'),
+          ),
+          IconButton(
+            tooltip: 'Export PDF',
+            icon: _exporting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.picture_as_pdf),
+            onPressed: _exporting ? null : _exportPdf,
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
         children: [
@@ -32,7 +81,6 @@ class ReportsScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           monthTotals.when(
             data: (t) {
-              final balance = t.income - t.expense;
               return Row(
                 children: [
                   Expanded(child: _statCard(theme, 'Masuk', t.income, Colors.green)),

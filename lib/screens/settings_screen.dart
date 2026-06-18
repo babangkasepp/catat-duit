@@ -1,6 +1,7 @@
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/notifications/notification_service.dart';
@@ -157,11 +158,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             },
           ),
           const Divider(height: 32),
+          _section(theme, 'Fitur'),
+          ListTile(
+            leading: const Icon(Icons.auto_awesome),
+            title: const Text('Year in Review'),
+            subtitle: const Text('Wrapped: Rangkuman keuangan tahun ini'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/wrapped'),
+          ),
+          const Divider(height: 32),
           _section(theme, 'Tentang'),
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: const Text('CatatDuit'),
-            subtitle: const Text('v0.2.1 — Offline-first finance tracker'),
+            subtitle: const Text('v0.3.0 — Offline-first finance tracker'),
             onTap: _onVersionTap,
           ),
           ListTile(
