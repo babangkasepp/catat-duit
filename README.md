@@ -19,6 +19,10 @@ Aplikasi manajemen keuangan personal — **offline-first**, **Indonesia-first**.
 - **Budget per kategori** dengan progress bar + alert lewat budget
 - **Reminder harian** offline (notification, gak butuh server)
 - **100% offline** — semua data nyimpen di SQLite di HP, gak butuh internet, gak butuh login
+- **OCR scan struk** — foto struk belanja, auto-detect total, merchant, tanggal (ML Kit offline)
+- **Streak tracking + gamification** — 12 achievements, badges, konsistensi harian
+- **Export PDF** — laporan bulanan lengkap, share via WhatsApp/email
+- **Year-in-Review Wrapped** — rangkuman keuangan tahunan ala Spotify Wrapped
 - **Material You** theme — auto light/dark mode mengikuti sistem
 
 ## 🏗️ Arsitektur
@@ -146,32 +150,36 @@ Aplikasi ini **100% offline-first**:
 - **Tidak ada** server, tidak ada cloud, tidak ada login
 - **Tidak ada** analytics atau tracking
 - Permission yang dipake:
-  - `CAMERA` & `READ_MEDIA_IMAGES` — buat OCR struk (rencana v0.2)
+  - `CAMERA` & `READ_MEDIA_IMAGES` — buat OCR scan struk (ML Kit offline)
   - `POST_NOTIFICATIONS` — buat reminder harian
   - `SCHEDULE_EXACT_ALARM` — buat reminder akurat
 
 ## 🗺️ Roadmap
 
-**v0.1 (current)** — Core MVP
+**v0.1** — Core MVP ✅
 - ✅ Input transaksi + parser bahasa natural
-- ✅ Kategori Indonesia-first
-- ✅ Laporan harian/bulanan/tahunan
+- ✅ Kategori Indonesia-first (16 kategori + ~200 keyword)
+- ✅ Laporan harian/bulanan/tahunan + pie chart
 - ✅ Budget bulanan + alert
-- ✅ Reminder harian
+- ✅ Reminder harian (offline notification)
 - ✅ Material You + dark mode
+- ✅ Onboarding flow
 
-**v0.2 — Smart Features**
-- [ ] OCR foto struk (offline, ML Kit on-device)
-- [ ] Streak tracking + gamification
-- [ ] Export PDF report
-- [ ] Year-in-review (Wrapped style)
+**v0.2** — Smart Features ✅
+- ✅ OCR foto struk (offline, ML Kit on-device)
+- ✅ Android low-memory hardening
 
-**v0.3 — Cloud (optional)**
+**v0.3 (current)** — Gamification & Export ✅
+- ✅ Streak tracking + gamification (12 achievements)
+- ✅ Export PDF report bulanan (summary, kategori, daftar transaksi)
+- ✅ Year-in-Review Wrapped (6-page animated summary)
+
+**v0.4 — Cloud (optional)**
 - [ ] Backup encrypted ke Supabase
 - [ ] Multi-device sync
 - [ ] Family sharing
 
-**v0.4 — Pro**
+**v0.5 — Pro**
 - [ ] AI insight (LLM-powered, optional online)
 - [ ] Tracking utang/piutang
 - [ ] Multi-akun (cash, e-wallet, bank — manual)
