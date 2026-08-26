@@ -212,3 +212,4 @@ Kontribusi: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
 **Built with ❤️ for Indonesian users**
 
 Catatan: Ini MVP sehat — bisa langsung di-build, dipake, dan dikembangin. Tetap perlu real-device testing buat validasi UX di berbagai HP Android.
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/babangkasepp/catat-duit?utm_source=oss&utm_medium=github&utm_campaign=babangkasepp%2Fcatat-duit&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
